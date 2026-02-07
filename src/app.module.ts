@@ -6,7 +6,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { I18nModule, AcceptLanguageResolver, I18nJsonLoader, QueryResolver, HeaderResolver } from 'nestjs-i18n';
+import { I18nModule, AcceptLanguageResolver, I18nJsonLoader, QueryResolver } from 'nestjs-i18n';
 import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -32,7 +32,6 @@ import { MenuModule } from './menu/menu.module';
       },
       resolvers: [
         { use: QueryResolver, options: ['lang', 'locale', 'l'] },
-        { use: HeaderResolver, options: ['accept-language'] },
         AcceptLanguageResolver,
       ],
     }),
