@@ -1,0 +1,16 @@
+{
+  "app": {
+    "hello": "Hello World!"
+  },
+  "auth": {
+    "missing_credentials": "Missing authentication credentials. Provide either Bearer token or x-api-key header.",
+    "authentication_failed": "Authentication failed",
+    "missing_authorization_header": "Missing or invalid authorization header",
+    "invalid_or_expired_token": "Invalid or expired token",
+    "missing_api_key": "Missing API key",
+    "invalid_api_key": "Invalid API key",
+    "user_not_found": "User not found",
+    "user_not_authenticated": "User not authenticated",
+    "missing_required_permissions": "Missing required permissions: {{permissions}}"
+  }
+}

@@ -1,0 +1,116 @@
+# Cursor Rules for NestJS Project
+
+## Documentation Standards
+
+- Use JSDoc standard for file headers and function documentation
+- Every file should have a JSDoc header comment describing its purpose
+- Example:
+  ```typescript
+  /**
+   * @fileoverview Description of what this file does
+   * @module path/to/module
+   */
+  ```
+
+## Naming Conventions
+
+- **Variables**: Use `lowerCamelCase` (e.g., `userName`, `isActive`)
+- **Classes**: Use `UpperCamelCase` (e.g., `UserService`, `AuthController`)
+- **Constants**: Use `UPPER_SNAKE_CASE` (e.g., `MAX_RETRY_ATTEMPTS`)
+- **Interfaces**: Use `UpperCamelCase` with optional `I` prefix (e.g., `IUser` or `User`)
+- **Enums**: Use `UpperCamelCase` for enum name, `UPPER_SNAKE_CASE` for values
+
+## Language Requirements
+
+- All code, comments, and names must be in **English**
+- Variable names, function names, class names, and comments should be in English
+- Documentation strings should be in English
+
+## Internationalization (i18n)
+
+- Any text sent to the client must be translatable
+- Use NestJS i18n module or a similar solution for translations
+- Never hardcode user-facing strings directly in code
+- Store translatable strings in language files or use translation keys
+
+## Database Management
+
+- **Always use migrations** for database schema changes
+- Never use `synchronize: true` in production
+- Create migrations for:
+  - Creating/modifying tables
+  - Creating/modifying schemas
+  - Adding/removing columns
+  - Creating indexes
+  - Any other database structure changes
+- Use the migration command: `npm run migrate`
+
+## Database Design Reference
+
+- **The database design is defined in `er.md`** (Entity-Relationship diagram in Mermaid format)
+- **When creating migrations or entities:**
+  - **ALWAYS** reference the `er.md` file first to understand the database schema
+  - Extract table definitions, column types, relationships, and constraints from `er.md`
+  - Ensure migrations match the design specified in `er.md`
+  - Ensure entities match the table structure defined in `er.md`
+- **When creating or modifying entities:**
+  - Check `er.md` for the exact table name, schema, column names, types, and constraints
+  - Match the entity properties to the columns defined in `er.md`
+  - Include all relationships (foreign keys) as specified in the diagram
+- **Keeping design in sync:**
+  - After creating a migration, verify that the `er.md` file reflects the current database structure
+  - If the database schema changes, update `er.md` to keep it synchronized
+  - The `er.md` file should always be the source of truth for the database design
+  - When adding new tables or modifying existing ones, update `er.md` accordingly
+
+## Database Column Types
+
+- **String fields**: Always use `VARCHAR` (with appropriate length) instead of `TEXT` for string columns
+  - Example: `VARCHAR(255)`, `VARCHAR(100)`, etc.
+  - Use `TEXT` only when explicitly needed for very long strings without length limit
+- **JSON fields**: Always use `JSONB` instead of `JSON` for JSON columns
+  - `JSONB` provides better performance and indexing capabilities
+  - Example: `JSONB` for storing structured data, metadata, schemas, etc.
+- **When creating migrations:**
+  - Convert `text` type from `er.md` to `VARCHAR` with appropriate length in migrations
+  - Convert `json` type from `er.md` to `JSONB` in migrations
+  - If `er.md` specifies `text`, use `VARCHAR(255)` as default unless a specific length is indicated
+- **When creating entities:**
+  - Use TypeORM decorators: `@Column({ type: 'varchar', length: 255 })` for strings
+  - Use TypeORM decorators: `@Column({ type: 'jsonb' })` for JSON fields
+
+## NestJS Best Practices
+
+- Follow NestJS official style guide and best practices
+- Use dependency injection for all services
+- Organize code in modules following NestJS module structure
+- Use DTOs (Data Transfer Objects) for data validation
+- Use pipes for validation and transformation
+- Use guards for authentication and authorization
+- Use interceptors for cross-cutting concerns
+- Use exception filters for error handling
+- Follow the single responsibility principle
+- Keep modules focused and cohesive
+- Use TypeORM decorators properly for entities
+- Use async/await for all asynchronous operations
+- Handle errors appropriately with try-catch blocks
+
+## Database Direct Connection
+
+- When asked to connect directly to the database to perform operations (insert, update, delete, query), always use the credentials from the `.env` file
+- Use `psql` with environment variables loaded from `.env`:
+  ```bash
+  source .env.dev && PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" -c "SQL_COMMAND"
+  ```
+- Always read database credentials from the `.env` file (or `.env.dev` if using symbolic link)
+- Use the same connection method for any direct database operations
+
+## API Endpoint Testing
+
+- When asked to test an endpoint, always use `curl` to make requests
+- Always use `localhost` as the host
+- Always read the `PORT` from the `.env` file (default: 3000 if not specified)
+- Format: `curl http://localhost:${PORT}/endpoint`
+- Example: `curl http://localhost:3101/test`
+- Use appropriate curl flags when needed (`-v` for verbose, `-s` for silent, `-X POST` for POST requests, etc.)
+- Always test endpoints using the port configured in the environment variables

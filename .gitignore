@@ -1,0 +1,10 @@
+.env
+.env.migrations
+.env.dev
+.env.migrations.dev
+.env.migrations.beta
+.env.migrations.dev
+.env.migrations.example
+.env.migrations.prod
+dist
+node_modules
