@@ -34,17 +34,23 @@ async function bootstrap(): Promise<void> {
       return callback(null, true);
     }
 
+    // Extract origin domain (without protocol)
+    const originDomain = origin.replace(/^https?:\/\//, '').toLowerCase();
+    const originProtocol = origin.startsWith('https://') ? 'https://' : 'http://';
+
     // Check each configured origin/pattern
     for (const pattern of corsConfig) {
-      // Exact match
-      if (pattern === origin) {
+      const normalizedPattern = pattern.toLowerCase().trim();
+
+      // Exact match (with or without protocol)
+      if (normalizedPattern === origin.toLowerCase() || normalizedPattern === originDomain) {
         return callback(null, true);
       }
 
       // Wildcard pattern: *.example.com (allows all subdomains, but NOT the base domain)
-      if (pattern.startsWith('*.')) {
-        const domain = pattern.substring(2); // Remove '*.'
-        const originDomain = origin.replace(/^https?:\/\//, '');
+      if (normalizedPattern.startsWith('*.')) {
+        const domain = normalizedPattern.substring(2); // Remove '*.'
+        
         // Check if origin is a subdomain (e.g., app1.example.com ends with .example.com)
         // But NOT the base domain (example.com itself)
         if (originDomain !== domain && originDomain.endsWith(`.${domain}`)) {
@@ -53,26 +59,36 @@ async function bootstrap(): Promise<void> {
       }
 
       // Domain pattern without wildcard: example.com (allows example.com AND all subdomains)
-      if (!pattern.includes('*') && !pattern.startsWith('http')) {
-        const domain = pattern;
-        const originDomain = origin.replace(/^https?:\/\//, '');
+      if (!normalizedPattern.includes('*') && !normalizedPattern.startsWith('http')) {
+        const domain = normalizedPattern;
+        
         // Check if origin is the domain or any subdomain
         if (originDomain === domain || originDomain.endsWith(`.${domain}`)) {
           return callback(null, true);
         }
       }
 
-      // Pattern with protocol: https://*.example.com
-      if (pattern.includes('*') && (pattern.startsWith('http://') || pattern.startsWith('https://'))) {
-        const [protocol, rest] = pattern.split('://');
+      // Pattern with protocol: https://*.example.com or http://*.example.com
+      if (normalizedPattern.includes('*') && (normalizedPattern.startsWith('http://') || normalizedPattern.startsWith('https://'))) {
+        const [protocol, rest] = normalizedPattern.split('://');
         if (rest?.startsWith('*.')) {
-          const domain = rest.substring(2);
-          const originProtocol = origin.startsWith('https://') ? 'https://' : 'http://';
-          const originDomain = origin.replace(/^https?:\/\//, '');
+          const domain = rest.substring(2); // Remove '*.'
           
-          if (originProtocol === `${protocol}://` && (originDomain === domain || originDomain.endsWith(`.${domain}`))) {
+          // For wildcard with protocol, only allow subdomains (not base domain)
+          if (originProtocol === `${protocol}://` && originDomain !== domain && originDomain.endsWith(`.${domain}`)) {
             return callback(null, true);
           }
+        }
+      }
+
+      // Pattern with protocol but no wildcard: https://example.com
+      if (!normalizedPattern.includes('*') && (normalizedPattern.startsWith('http://') || normalizedPattern.startsWith('https://'))) {
+        const [protocol, rest] = normalizedPattern.split('://');
+        const domain = rest;
+        
+        // Allow exact match with protocol
+        if (originProtocol === `${protocol}://` && originDomain === domain) {
+          return callback(null, true);
         }
       }
     }
