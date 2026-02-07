@@ -12,6 +12,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { MenuModule } from './menu/menu.module';
+import { UserModule } from './user/user.module';
+import { RoleModule } from './role/role.module';
+import { PermissionModule } from './permission/permission.module';
 
 /**
  * Root module of the application
@@ -53,6 +56,9 @@ import { MenuModule } from './menu/menu.module';
     }),
     AuthModule,
     MenuModule,
+    UserModule,
+    RoleModule,
+    PermissionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

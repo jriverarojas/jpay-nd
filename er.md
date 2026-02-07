@@ -40,6 +40,7 @@ erDiagram
 		uuid id PK ""  
 		text external_role_key  "UK Maps to External role identifier/key"  
 		text name  "Role name shown in app"  
+		boolean only_admin  "" 
 		timestamptz created_at  ""  
 		timestamptz updated_at  ""  
 	}
@@ -52,6 +53,7 @@ erDiagram
 		uuid parent_permission_id FK "Self-FK for menu tree (null = root)"  
 		int sort_order  "Order among siblings (menus)"  
 		boolean is_active  ""  
+		boolean only_admin  "" 
 		timestamptz created_at  ""  
 		timestamptz updated_at  ""  
 	}

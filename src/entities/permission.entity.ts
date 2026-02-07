@@ -69,6 +69,12 @@ export class Permission {
   isActive: boolean;
 
   /**
+   * Whether this permission can only be assigned/viewed by admin users
+   */
+  @Column({ name: 'only_admin', type: 'boolean', default: false })
+  onlyAdmin: boolean;
+
+  /**
    * Creation timestamp
    */
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
