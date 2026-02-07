@@ -1,0 +1,44 @@
+version: '3.8'
+
+# Esta versión usa variables de entorno de Portainer
+# Útil si quieres usar Portainer Secrets o cambiar valores sin editar el YAML
+# Para usarla: En Portainer, después de pegar este YAML, ve a "Environment variables"
+# y agrega las variables allí. Portainer reemplazará ${VARIABLE} automáticamente.
+
+services:
+  jpay-nd:
+    image: ${DOCKER_IMAGE:-your-username/jpay-nd:latest}
+    container_name: jpay-nd
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT:-3000}
+      # Database Configuration - Estas variables deben estar en Portainer Environment
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_SSL=${DB_SSL:-false}
+      - DB_LOGGING=${DB_LOGGING:-false}
+      # Supabase Configuration - Estas variables deben estar en Portainer Environment
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # External Configuration
+      - EXTERNAL_KEY=${EXTERNAL_KEY}
+      # CORS Configuration - Lista blanca de orígenes permitidos (separados por comas)
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174}
+    networks:
+      - jpay-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+networks:
+  jpay-network:
+    driver: bridge

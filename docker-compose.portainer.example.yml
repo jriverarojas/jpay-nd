@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  jpay-nd:
+    # IMPORTANTE: Reemplaza 'your-username' con tu usuario de Docker Hub o registry
+    image: your-username/jpay-nd:latest
+    container_name: jpay-nd
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Database Configuration - REEMPLAZA estos valores
+      - DB_HOST=db.xxxxx.supabase.co
+      - DB_PORT=5432
+      - DB_USERNAME=postgres.xxxxx
+      - DB_PASSWORD=your-database-password
+      - DB_DATABASE=postgres
+      - DB_SSL=true
+      - DB_LOGGING=false
+      # Supabase Configuration - REEMPLAZA estos valores
+      - SUPABASE_URL=https://xxxxx.supabase.co
+      - SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+      # External Configuration - REEMPLAZA este valor
+      - EXTERNAL_KEY=your-external-key
+      # CORS Configuration - Lista blanca de orígenes permitidos (separados por comas)
+      # Soporta wildcards: *.example.com permite todos los subdominios
+      # Ejemplo: *.example.com permite app1.example.com, app2.example.com, etc.
+      - CORS_ORIGINS=https://your-frontend-domain.com,*.your-frontend-domain.com
+    networks:
+      - jpay-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+networks:
+  jpay-network:
+    driver: bridge

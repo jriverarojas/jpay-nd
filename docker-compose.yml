@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  jpay-nd:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jpay-nd
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT:-3000}
+      # Database Configuration
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_SSL=${DB_SSL:-false}
+      - DB_LOGGING=${DB_LOGGING:-false}
+      # Supabase Configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # External Configuration
+      - EXTERNAL_KEY=${EXTERNAL_KEY}
+      # CORS Configuration - Lista blanca de orígenes permitidos (separados por comas)
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174}
+    env_file:
+      - .env
+    networks:
+      - jpay-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+networks:
+  jpay-network:
+    driver: bridge

@@ -47,6 +47,15 @@ NODE_ENV=development
 # Supabase Configuration (for authentication)
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-secret-key
+
+# CORS Configuration (whitelist of allowed origins, comma-separated)
+# Supports wildcards: *.example.com allows all subdomains of example.com
+# Examples:
+#   - Exact origins: https://app.example.com,https://www.example.com
+#   - Wildcard subdomains: *.example.com (allows app1.example.com, app2.example.com, etc.)
+#   - Domain base: example.com (allows example.com and all subdomains)
+#   - With protocol: https://*.example.com
+CORS_ORIGINS=http://localhost:5173,http://localhost:5174
 ```
 
 **Supabase Configuration Variables:**

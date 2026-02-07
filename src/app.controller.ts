@@ -25,4 +25,17 @@ export class AppController {
   async getHello(@Query('lang') lang?: string): Promise<string> {
     return this.appService.getHello(lang);
   }
+
+  /**
+   * GET endpoint for health check
+   * Used by Docker and monitoring tools to verify application status
+   * @returns {object} Health status object
+   */
+  @Get('health')
+  getHealth(): { status: string; timestamp: string } {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
