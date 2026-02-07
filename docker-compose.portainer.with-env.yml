@@ -1,9 +1,9 @@
 version: '3.8'
 
-# Esta versión usa variables de entorno de Portainer
-# Útil si quieres usar Portainer Secrets o cambiar valores sin editar el YAML
-# Para usarla: En Portainer, después de pegar este YAML, ve a "Environment variables"
-# y agrega las variables allí. Portainer reemplazará ${VARIABLE} automáticamente.
+# This version uses Portainer environment variables
+# Useful if you want to use Portainer Secrets or change values without editing the YAML
+# To use it: In Portainer, after pasting this YAML, go to "Environment variables"
+# and add the variables there. Portainer will replace ${VARIABLE} automatically.
 
 services:
   jpay-nd:
@@ -15,7 +15,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=${PORT:-3000}
-      # Database Configuration - Estas variables deben estar en Portainer Environment
+      # Database Configuration - These variables must be in Portainer Environment
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT:-5432}
       - DB_USERNAME=${DB_USERNAME}
@@ -23,12 +23,12 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - DB_SSL=${DB_SSL:-false}
       - DB_LOGGING=${DB_LOGGING:-false}
-      # Supabase Configuration - Estas variables deben estar en Portainer Environment
+      # Supabase Configuration - These variables must be in Portainer Environment
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       # External Configuration
       - EXTERNAL_KEY=${EXTERNAL_KEY}
-      # CORS Configuration - Lista blanca de orígenes permitidos (separados por comas)
+      # CORS Configuration - Whitelist of allowed origins (comma-separated)
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:5173,http://localhost:5174}
     networks:
       - jpay-network

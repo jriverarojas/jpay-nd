@@ -10,22 +10,22 @@ This guide explains how to build and deploy the jpay-nd application using Docker
 
 ## Quick Answer: Using YAML in Portainer
 
-**Sí, puedes usar archivos YAML en Portainer usando Stacks (recomendado):**
+**Yes, you can use YAML files in Portainer using Stacks (recommended):**
 
-1. Edita `docker-compose.portainer.yml` con tus valores (imagen, DB, Supabase)
-2. Ve a **Stacks** → **Add stack**
-3. Selecciona **Web editor**
-4. Pega el contenido del YAML (ya con tus valores)
-5. Click **Deploy the stack** - ¡Listo! No necesitas configurar variables adicionales
+1. Edit `docker-compose.portainer.yml` with your values (image, DB, Supabase)
+2. Go to **Stacks** → **Add stack**
+3. Select **Web editor**
+4. Paste the YAML content (already with your values)
+5. Click **Deploy the stack** - Done! You don't need to configure additional variables
 
-**Ventajas:**
-- ✅ No necesitas usar la interfaz gráfica
-- ✅ **Todas las variables están en el YAML** - no hay que configurarlas dos veces
-- ✅ Configuración versionada (puedes guardarla en Git)
-- ✅ Fácil de actualizar y mantener
-- ✅ Mejor para producción
+**Advantages:**
+- ✅ You don't need to use the graphical interface
+- ✅ **All variables are in the YAML** - no need to configure them twice
+- ✅ Versioned configuration (you can save it in Git)
+- ✅ Easy to update and maintain
+- ✅ Better for production
 
-Ver la sección **"Option 2: Using Docker Compose Stack"** más abajo para instrucciones detalladas.
+See the **"Option 2: Using Docker Compose Stack"** section below for detailed instructions.
 
 ## Quick Start
 
@@ -107,36 +107,36 @@ Before pushing, you need to:
 
 ### Option 2: Using Docker Compose Stack (Recommended)
 
-Portainer permite usar archivos YAML (docker-compose) a través de **Stacks**. Esto es más fácil y mantenible que la interfaz gráfica.
+Portainer allows using YAML files (docker-compose) through **Stacks**. This is easier and more maintainable than the graphical interface.
 
-#### Pasos:
+#### Steps:
 
-1. **Prepara tu imagen Docker** (si aún no lo has hecho):
+1. **Prepare your Docker image** (if you haven't already):
    ```bash
    ./docker-build.sh push your-username
    ```
 
-2. **Edita el archivo YAML con tus valores:**
-   - Abre `docker-compose.portainer.yml`
-   - Reemplaza `your-username` con tu usuario de Docker Hub
-   - Reemplaza todos los valores de ejemplo con tus credenciales reales:
+2. **Edit the YAML file with your values:**
+   - Open `docker-compose.portainer.yml`
+   - Replace `your-username` with your Docker Hub username
+   - Replace all example values with your real credentials:
      - `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`, etc.
      - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 
-3. **En Portainer:**
-   - Ve a **Stacks** → **Add stack**
+3. **In Portainer:**
+   - Go to **Stacks** → **Add stack**
    - **Name**: `jpay-nd`
-   - **Build method**: Selecciona una de estas opciones:
+   - **Build method**: Select one of these options:
 
-   **Opción A: Web editor** (más fácil - valores directos en YAML)
-   - Selecciona **Web editor**
-   - Copia y pega el contenido de `docker-compose.portainer.yml` (ya con tus valores)
-   - **No necesitas agregar variables de entorno** - ya están en el YAML
+   **Option A: Web editor** (easiest - direct values in YAML)
+   - Select **Web editor**
+   - Copy and paste the content of `docker-compose.portainer.yml` (already with your values)
+   - **You don't need to add environment variables** - they're already in the YAML
    - Click **Deploy the stack**
 
-   **Opción B: Usar variables de entorno** (más seguro para secrets)
-   - Usa `docker-compose.portainer.with-env.yml` si prefieres
-   - En la sección **Environment variables** de Portainer, agrega:
+   **Option B: Use environment variables** (more secure for secrets)
+   - Use `docker-compose.portainer.with-env.yml` if you prefer
+   - In the **Environment variables** section of Portainer, add:
      ```
      DOCKER_IMAGE=your-username/jpay-nd:latest
      PORT=3000
@@ -151,31 +151,31 @@ Portainer permite usar archivos YAML (docker-compose) a través de **Stacks**. E
      ```
    - Click **Deploy the stack**
 
-   **Opción B: Upload** (si tienes el archivo)
-   - Selecciona **Upload**
-   - Sube el archivo `docker-compose.portainer.yml`
-   - Configura las variables de entorno
+   **Option C: Upload** (if you have the file)
+   - Select **Upload**
+   - Upload the `docker-compose.portainer.yml` file
+   - Configure environment variables
    - Click **Deploy the stack**
 
-   **Opción C: Git repository** (para CI/CD)
-   - Selecciona **Repository**
-   - Ingresa la URL de tu repositorio Git
+   **Option D: Git repository** (for CI/CD)
+   - Select **Repository**
+   - Enter your Git repository URL
    - **Compose path**: `jpay-nd/docker-compose.portainer.yml`
-   - Configura las variables de entorno
+   - Configure environment variables
    - Click **Deploy the stack**
 
-3. **Actualizar el stack:**
-   - Ve a **Stacks** → Selecciona `jpay-nd`
+4. **Update the stack:**
+   - Go to **Stacks** → Select `jpay-nd`
    - Click **Editor**
-   - Modifica el YAML si es necesario
+   - Modify the YAML if necessary
    - Click **Update the stack**
 
-#### Ventajas de usar Stacks:
-- ✅ Configuración versionada (puedes guardar el YAML en Git)
-- ✅ Fácil de actualizar (solo editas el YAML)
-- ✅ Puedes usar variables de entorno
-- ✅ Mejor para múltiples servicios
-- ✅ Puedes recrear fácilmente desde el YAML
+#### Advantages of using Stacks:
+- ✅ Versioned configuration (you can save the YAML in Git)
+- ✅ Easy to update (just edit the YAML)
+- ✅ You can use environment variables
+- ✅ Better for multiple services
+- ✅ You can easily recreate from the YAML
 
 ## Updating the Application
 
@@ -228,13 +228,13 @@ SUPABASE_SERVICE_ROLE_KEY=your-secret-key
 # External
 EXTERNAL_KEY=your-external-key
 
-# CORS Configuration - Lista blanca de orígenes permitidos (separados por comas)
-# Soporta wildcards: *.example.com permite todos los subdominios
-# Ejemplos:
-#   - Orígenes exactos: https://app.example.com,https://www.example.com
-#   - Wildcard subdominios: *.example.com (permite app1.example.com, app2.example.com, etc.)
-#   - Dominio base: example.com (permite example.com y todos los subdominios)
-#   - Con protocolo: https://*.example.com
+# CORS Configuration - Whitelist of allowed origins (comma-separated)
+# Supports wildcards: *.example.com allows all subdomains
+# Examples:
+#   - Exact origins: https://app.example.com,https://www.example.com
+#   - Wildcard subdomains: *.example.com (allows app1.example.com, app2.example.com, etc.)
+#   - Base domain: example.com (allows example.com and all subdomains)
+#   - With protocol: https://*.example.com
 CORS_ORIGINS=https://your-frontend-domain.com,https://www.your-frontend-domain.com
 ```
 

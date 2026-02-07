@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   jpay-nd:
-    # Imagen en Docker Hub
+    # Docker Hub image
     image: jriverarojas/jpay-nd:latest
     container_name: jpay-nd
     restart: unless-stopped
@@ -11,7 +11,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      # Database Configuration - REEMPLAZA estos valores con tus credenciales
+      # Database Configuration - REPLACE these values with your credentials
       - DB_HOST=db.xxxxx.supabase.co
       - DB_PORT=5432
       - DB_USERNAME=postgres.xxxxx
@@ -19,14 +19,14 @@ services:
       - DB_DATABASE=postgres
       - DB_SSL=true
       - DB_LOGGING=false
-      # Supabase Configuration - REEMPLAZA estos valores con tus credenciales
+      # Supabase Configuration - REPLACE these values with your credentials
       - SUPABASE_URL=https://xxxxx.supabase.co
       - SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
       # External Configuration
       - EXTERNAL_KEY=your-external-key
-      # CORS Configuration - Lista blanca de orígenes permitidos (separados por comas)
-      # Soporta wildcards: *.example.com permite todos los subdominios
-      # Ejemplo: *.example.com permite app1.example.com, app2.example.com, etc.
+      # CORS Configuration - Whitelist of allowed origins (comma-separated)
+      # Supports wildcards: *.example.com allows all subdomains
+      # Example: *.example.com allows app1.example.com, app2.example.com, etc.
       - CORS_ORIGINS=https://your-frontend-domain.com,*.your-frontend-domain.com
     networks:
       - jpay-network
