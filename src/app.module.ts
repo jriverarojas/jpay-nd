@@ -15,6 +15,7 @@ import { MenuModule } from './menu/menu.module';
 import { UserModule } from './user/user.module';
 import { RoleModule } from './role/role.module';
 import { PermissionModule } from './permission/permission.module';
+import { LoggingModule } from './logging/logging.module';
 
 /**
  * Root module of the application
@@ -59,6 +60,7 @@ import { PermissionModule } from './permission/permission.module';
     UserModule,
     RoleModule,
     PermissionModule,
+    LoggingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

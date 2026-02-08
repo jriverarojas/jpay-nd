@@ -7,6 +7,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { LoggingInterceptor } from './logging/logging.interceptor';
 
 /**
  * Bootstrap function to initialize and start the NestJS application
@@ -25,6 +26,10 @@ async function bootstrap(): Promise<void> {
       transform: true,
     }),
   );
+
+  // Enable logging interceptor globally
+  const loggingInterceptor = app.get(LoggingInterceptor);
+  app.useGlobalInterceptors(loggingInterceptor);
 
   // Enable CORS for frontend
   // CORS origins can be configured via CORS_ORIGINS environment variable (comma-separated)

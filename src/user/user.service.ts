@@ -3,7 +3,7 @@
  * @module user/user.service
  */
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { TenantUser } from '../entities/tenant-user.entity';
@@ -12,6 +12,7 @@ import { TenantUserRole } from '../entities/tenant-user-role.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PermissionService } from '../auth/services/permission.service';
+import { SupabaseService } from '../auth/supabase/supabase.service';
 
 /**
  * User service
@@ -19,6 +20,8 @@ import { PermissionService } from '../auth/services/permission.service';
  */
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(TenantUser)
     private readonly tenantUserRepository: Repository<TenantUser>,
@@ -27,6 +30,7 @@ export class UserService {
     @InjectRepository(TenantUserRole)
     private readonly tenantUserRoleRepository: Repository<TenantUserRole>,
     private readonly permissionService: PermissionService,
+    private readonly supabaseService: SupabaseService,
   ) {}
 
   /**
@@ -100,7 +104,64 @@ export class UserService {
       throw new BadRequestException('Cannot assign admin-only roles');
     }
 
-    // Create user
+    // Sync user with Supabase
+    // externalUserId is the Supabase user ID, so we use it directly
+    const supabase = this.supabaseService.getClient();
+
+    try {
+      // Verify user exists in Supabase by externalUserId (which is the Supabase user ID)
+      const { data: existingSupabaseUser, error: getUserError } = await supabase.auth.admin.getUserById(createUserDto.externalUserId);
+      
+      if (getUserError || !existingSupabaseUser?.user) {
+        // User doesn't exist in Supabase, create it
+        this.logger.log(`User ${createUserDto.externalUserId} not found in Supabase, creating new user`);
+        
+        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+          id: createUserDto.externalUserId,
+          email: `${createUserDto.externalUserId}@temp.local`, // Temporary email, can be updated later
+          user_metadata: {
+            username: createUserDto.username,
+          },
+          email_confirm: true, // Auto-confirm email
+        });
+
+        if (createError) {
+          this.logger.error(`Failed to create user in Supabase: ${createError.message}`, createError.stack);
+          throw new BadRequestException(`Failed to create user in Supabase: ${createError.message}`);
+        }
+
+        if (!newUser?.user?.id) {
+          throw new BadRequestException('Failed to create user in Supabase: No user ID returned');
+        }
+
+        this.logger.log(`Created user in Supabase with ID: ${newUser.user.id}`);
+      } else {
+        // User already exists in Supabase, update metadata if needed
+        this.logger.log(`User ${createUserDto.externalUserId} already exists in Supabase`);
+        
+        // Update user metadata (username) if it has changed
+        if (existingSupabaseUser.user.user_metadata?.username !== createUserDto.username) {
+          const { error: updateError } = await supabase.auth.admin.updateUserById(createUserDto.externalUserId, {
+            user_metadata: {
+              ...existingSupabaseUser.user.user_metadata,
+              username: createUserDto.username,
+            },
+          });
+
+          if (updateError) {
+            this.logger.warn(`Failed to update user metadata in Supabase: ${updateError.message}`);
+            // Don't throw error, just log it
+          } else {
+            this.logger.log(`Updated user metadata in Supabase for ID: ${createUserDto.externalUserId}`);
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error(`Error syncing user with Supabase: ${error.message}`, error.stack);
+      throw new BadRequestException(`Failed to sync user with Supabase: ${error.message}`);
+    }
+
+    // Create user in database
     const user = this.tenantUserRepository.create({
       tenantId,
       externalUserId: createUserDto.externalUserId,
@@ -194,6 +255,26 @@ export class UserService {
     if (updateUserDto.username !== undefined) {
       user.username = updateUserDto.username;
       await this.tenantUserRepository.save(user);
+
+      // Update user in Supabase (externalUserId is the Supabase user ID)
+      const supabase = this.supabaseService.getClient();
+      try {
+        const { error: updateError } = await supabase.auth.admin.updateUserById(user.externalUserId, {
+          user_metadata: {
+            username: updateUserDto.username,
+          },
+        });
+
+        if (updateError) {
+          this.logger.error(`Failed to update user in Supabase: ${updateError.message}`, updateError);
+          // Don't throw error, just log it - database update succeeded
+        } else {
+          this.logger.log(`Updated user in Supabase with ID: ${user.externalUserId}`);
+        }
+      } catch (error) {
+        this.logger.error(`Error updating user in Supabase: ${error.message}`, error.stack);
+        // Don't throw error, just log it - database update succeeded
+      }
     }
 
     // Update roles if provided
@@ -246,6 +327,25 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
+    // Delete user from Supabase (externalUserId is the Supabase user ID)
+    const supabase = this.supabaseService.getClient();
+    try {
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(user.externalUserId);
+
+      if (deleteError) {
+        this.logger.error(`Failed to delete user from Supabase: ${deleteError.message}`, deleteError);
+        // Just log the error and continue with database deletion
+        // This allows database cleanup even if Supabase deletion fails
+        this.logger.warn(`Continuing with database deletion despite Supabase error`);
+      } else {
+        this.logger.log(`Deleted user from Supabase with ID: ${user.externalUserId}`);
+      }
+    } catch (error) {
+      this.logger.error(`Error deleting user from Supabase: ${error.message}`, error.stack);
+      // Continue with database deletion
+    }
+
+    // Delete user from database
     await this.tenantUserRepository.remove(user);
   }
 }
