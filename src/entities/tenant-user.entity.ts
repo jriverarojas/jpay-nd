@@ -47,6 +47,24 @@ export class TenantUser {
   username: string;
 
   /**
+   * First name
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  firstname: string | null;
+
+  /**
+   * Last name
+   */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  lastname: string | null;
+
+  /**
+   * Status: PENDING_INVITE | ACTIVE
+   */
+  @Column({ type: 'varchar', length: 50, default: 'PENDING_INVITE' })
+  status: string;
+
+  /**
    * Creation timestamp
    */
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

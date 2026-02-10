@@ -3,25 +3,40 @@
  * @module user/dto/create-user.dto
  */
 
-import { IsString, IsArray, IsUUID, IsNotEmpty, ArrayMinSize } from 'class-validator';
+import { IsString, IsArray, IsUUID, IsNotEmpty, ArrayMinSize, IsOptional, IsEmail } from 'class-validator';
 
 /**
  * DTO for creating a user
  */
 export class CreateUserDto {
   /**
-   * External User ID (from Supabase)
-   */
-  @IsString()
-  @IsNotEmpty()
-  externalUserId: string;
-
-  /**
    * Username/display handle
    */
   @IsString()
   @IsNotEmpty()
   username: string;
+
+  /**
+   * Email address (required for Supabase user creation)
+   */
+  @IsString()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  /**
+   * First name
+   */
+  @IsString()
+  @IsOptional()
+  firstname?: string;
+
+  /**
+   * Last name
+   */
+  @IsString()
+  @IsOptional()
+  lastname?: string;
 
   /**
    * Array of role IDs to assign to the user

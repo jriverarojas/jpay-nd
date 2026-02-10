@@ -76,13 +76,52 @@ export class UserService {
    * @returns {Promise<TenantUser>} Created user
    */
   async create(tenantId: string, createUserDto: CreateUserDto, currentUserId: string): Promise<TenantUser> {
-    // Check if user already exists
-    const existingUser = await this.tenantUserRepository.findOne({
-      where: { externalUserId: createUserDto.externalUserId },
-    });
+    const supabase = this.supabaseService.getClient();
 
-    if (existingUser) {
-      throw new BadRequestException('User with this externalUserId already exists');
+    // Always create a new user in Supabase (externalUserId never comes from the request)
+    let externalUserId: string;
+    
+    try {
+      this.logger.log('Creating new user in Supabase');
+      
+      // Prepare user metadata
+      const userMetadata: Record<string, any> = {
+        username: createUserDto.username,
+      };
+      
+      if (createUserDto.firstname) {
+        userMetadata.firstname = createUserDto.firstname;
+      }
+      
+      if (createUserDto.lastname) {
+        userMetadata.lastname = createUserDto.lastname;
+      }
+      
+      // Create user in Supabase without specifying ID (Supabase will generate it)
+      // User will be created in PENDING_INVITE status, waiting for invitation acceptance
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: createUserDto.email,
+        user_metadata: userMetadata,
+        email_confirm: false, // Don't auto-confirm, user needs to accept invitation
+      });
+
+      if (createError) {
+        this.logger.error(`Failed to create user in Supabase: ${createError.message}`, createError.stack);
+        throw new BadRequestException(`Failed to create user in Supabase: ${createError.message}`);
+      }
+
+      if (!newUser?.user?.id) {
+        throw new BadRequestException('Failed to create user in Supabase: No user ID returned');
+      }
+
+      externalUserId = newUser.user.id;
+      this.logger.log(`Created user in Supabase with ID: ${externalUserId}, status: PENDING_INVITE`);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(`Error creating user in Supabase: ${error.message}`, error.stack);
+      throw new BadRequestException(`Failed to create user in Supabase: ${error.message}`);
     }
 
     // Verify all roles exist and belong to the tenant
@@ -104,68 +143,14 @@ export class UserService {
       throw new BadRequestException('Cannot assign admin-only roles');
     }
 
-    // Sync user with Supabase
-    // externalUserId is the Supabase user ID, so we use it directly
-    const supabase = this.supabaseService.getClient();
-
-    try {
-      // Verify user exists in Supabase by externalUserId (which is the Supabase user ID)
-      const { data: existingSupabaseUser, error: getUserError } = await supabase.auth.admin.getUserById(createUserDto.externalUserId);
-      
-      if (getUserError || !existingSupabaseUser?.user) {
-        // User doesn't exist in Supabase, create it
-        this.logger.log(`User ${createUserDto.externalUserId} not found in Supabase, creating new user`);
-        
-        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-          id: createUserDto.externalUserId,
-          email: `${createUserDto.externalUserId}@temp.local`, // Temporary email, can be updated later
-          user_metadata: {
-            username: createUserDto.username,
-          },
-          email_confirm: true, // Auto-confirm email
-        });
-
-        if (createError) {
-          this.logger.error(`Failed to create user in Supabase: ${createError.message}`, createError.stack);
-          throw new BadRequestException(`Failed to create user in Supabase: ${createError.message}`);
-        }
-
-        if (!newUser?.user?.id) {
-          throw new BadRequestException('Failed to create user in Supabase: No user ID returned');
-        }
-
-        this.logger.log(`Created user in Supabase with ID: ${newUser.user.id}`);
-      } else {
-        // User already exists in Supabase, update metadata if needed
-        this.logger.log(`User ${createUserDto.externalUserId} already exists in Supabase`);
-        
-        // Update user metadata (username) if it has changed
-        if (existingSupabaseUser.user.user_metadata?.username !== createUserDto.username) {
-          const { error: updateError } = await supabase.auth.admin.updateUserById(createUserDto.externalUserId, {
-            user_metadata: {
-              ...existingSupabaseUser.user.user_metadata,
-              username: createUserDto.username,
-            },
-          });
-
-          if (updateError) {
-            this.logger.warn(`Failed to update user metadata in Supabase: ${updateError.message}`);
-            // Don't throw error, just log it
-          } else {
-            this.logger.log(`Updated user metadata in Supabase for ID: ${createUserDto.externalUserId}`);
-          }
-        }
-      }
-    } catch (error) {
-      this.logger.error(`Error syncing user with Supabase: ${error.message}`, error.stack);
-      throw new BadRequestException(`Failed to sync user with Supabase: ${error.message}`);
-    }
-
-    // Create user in database
+    // Create user in database with PENDING_INVITE status
     const user = this.tenantUserRepository.create({
       tenantId,
-      externalUserId: createUserDto.externalUserId,
+      externalUserId,
       username: createUserDto.username,
+      firstname: createUserDto.firstname || null,
+      lastname: createUserDto.lastname || null,
+      status: 'PENDING_INVITE', // User is invited but pending acceptance
     });
 
     const savedUser = await this.tenantUserRepository.save(user);

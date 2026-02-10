@@ -32,6 +32,9 @@ erDiagram
 		uuid tenant_id FK "Tenant this user belongs to"  
 		text external_user_id UK "External User ID"  
 		text username  "Username/display handle"  
+		text firstname  "Firstname"
+		text lastname  "Lastname"
+		text status  "Status PENDING_INVITE | ACTIVE"
 		timestamptz created_at  ""  
 		timestamptz updated_at  ""  
 	}
